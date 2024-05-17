@@ -1,5 +1,6 @@
 import datetime
 import os
+import time
 import re
 import socket
 from time import sleep
@@ -63,46 +64,28 @@ class LoRaDevice(LoRa):
     def on_rx_done(self):
         self.clear_irq_flags(RxDone=1)
         payload = self.read_payload(nocheck=True)
-        print("Received",payload)
+        self.rssiNode = self.get_pkt_rssi_value()
+        self.snrNode = self.get_pkt_snr_value()
+        #print("Received",payload)
+        print("Rssi : ",self.rssiNode)
+        print("Snr : ",self.snrNode)
         if payload is not None:
             self.stateRx = True
-            #print(self.get_pkt_rssi_value)
-            # self.localaddr_rx = payload[0]
-            # self.destinationaddr_rx = payload[1]
-            # self.data_lenght_rx = payload[2]
-            # if hex(self.localaddr_rx) == self.local_address and hex(self.destinationaddr_rx)== self.destination_address:
-            #     payload_without_first_three = payload[3:]
-            #     self.received_data = ''.join([chr(num) for num in payload_without_first_three])
-            #     if re.search(r'[A-Za-z,.[\]]',self.received_data):
-            #         print("Received: ",self.received_data)
-            #         sleep(1)
-            #         self.stateRx = True
-            #         self.rssiNode = self.get_pkt_rssi_value()
-            #         self.snrNode = self.get_pkt_snr_value()
-            #         current_time = datetime.datetime.now()
-            #         current_date = current_time.date()  
-            #         current_data = "Time" + str(current_time)
-            #         payload_as_str = [str(item) for item in payload]
-            #         # สร้างชื่อไฟล์ใหม่โดยมีการลงท้ายด้วยวันที่ปัจจุบัน
-            #         base_file_name = ''
-            #         file_name = f"{base_file_name}_{current_date}.txt"
-            #         # ตรวจสอบว่าไฟล์ใหม่สร้างขึ้นในวันเดียวกันหรือไม่
-            #         if not os.path.exists(file_name):
-			# 			# สร้างไฟล์ใหม่
-            #             with open(file_name, 'a') as file:
-            #                 file.write("เริ่มต้นสร้างไฟล์ใหม่...\n")
-
-			# 		# เขียนข้อมูลลงในไฟล์
-            #         with open(file_name, 'a') as file:
-            #             file.write('\n')
-            #             file.write(current_data)
-            #             file.write('\nReceive as byte		: ' + ','.join(payload_as_str))
-            #             file.write('\nReceive as String	: ' + self.received_data)
-            #             file.write('\nRSSI 				: ' + str(self.rssiNode))
-            #             file.write('\nSNR  				: ' + str(self.snrNode))
-            #         print("--------------------------save log----------------------------")
-            #     else:
-            #         print("false")
+            self.received_data = payload
+            if re.search(r'[A-Za-z,.[\]]',self.received_data):
+                print("Received : ",self.received_data)
+                current_time = datetime.datetime.now()
+                current_date = current_time.date()
+                current_data = "Time" + str(current_time)
+                base_file_name = ''
+                file_name = f"{base_file_name}_{current_date}.txt"
+                #write data into file
+                with open(file_name,'a') as file:
+                    file.write('\n')
+                    file.write(current_data)
+                    file.write('\nReceive as String	: ' + self.received_data)
+                    file.write('\nRSSI 				: ' + str(self.rssiNode))
+                    file.write('\nSNR  				: ' + str(self.snrNode))
 
     def reset_value(self):
         self.local_address = hex(0x23)
@@ -118,33 +101,33 @@ class LoRaDevice(LoRa):
         self.set_mode(MODE.RXCONT)
         state = "ONE"  #assign state
         count = 0
+        start_time = time.time()*1000
         while True:
-                if state == "ONE":
-                    lora.send()
+            current_time = int(round(time.time()*1000))
+            if state == "ONE":
+                sys.stdout.flush()
+                if self.stateRx == True:
+                    self.stateRx = False
                     state = "TWO"
-                    #print("Data sent go to state "+ state)
-                elif state == "TWO":
-                        #rssi_value = self.get_rssi_value()
-                        #status = self.get_modem_status()
-                        sys.stdout.flush()
-                        if self.stateRx == True:
-                                #print("Received.")
-                                self.stateRx = False
-                                state = "ONE"
-                     #else:
-                        #print("Can not receive")    #add millis instead of sleep
-                         #count+=1
-                         #print("Can not receive round: "+str(count))
-                         #if count == 5:
-                         #    state = "ONE"
-                         #    print("Can not receive back to state "+state)
-                         #    count = 0
-                sleep(0.1)
+                else:
+                    if current_time - start_time >= 1000:
+                        count+=1
+                        print("Can not receive round: "+str(count))
+                        start_time = current_time
+                        if count == 5:
+                            state = "ONE"
+                            print("Can not receive back to state "+state)
+                            count = 0
+            elif state == "TWO":
+                lora.send()
+                state = "ONE"
+            sleep(0.1)
 
 lora = LoRaDevice(verbose=False)
 lora.set_mode(MODE.STDBY)
 lora.set_pa_config(pa_select=1)
 lora.set_freq(915.0)      
+lora.set_spreading_factor(7)
 
 try:
     lora.start()
