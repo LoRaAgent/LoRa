@@ -8,45 +8,20 @@ int interval = 2000;        // interval between sends
 void setup(){
     Serial.begin(115200);
     LoRa.setPins(SS, RST, DIO0);
-    LoRa.setTxPower(12);
+    LoRa.setTxPower(18);
     SPI.begin(SCK, MISO, MOSI, SS);
-    while(!LoRa.begin(923E6)){
+    while(!LoRa.begin(915E6)){
         Serial.println("LoRa Initailization failed!");
         delay(500);
     }
-    Serial.println("LoRa init succeeded.");
-    Serial.println();
-    Serial.println("LoRa Simple Node");
-    Serial.println("Only receive messages from gateways");
-    Serial.println("Tx: invertIQ disable");
-    Serial.println("Rx: invertIQ enable");
-    Serial.println();
-
     LoRa.onReceive(onReceive);
-    LoRa.onTxDone(onTxDone);
-    LoRa_rxMode();
+    LoRa.receive();
+    Serial.println("LoRa init succeeded.");
 }
 
 void loop(){
-    if (runEvery(1000)) { // repeat every 1000 millis
-
-        String message = "HeLoRa World! ";
-        message += "I'm a Node! ";
-        message += millis();
-
-        LoRa_sendMessage(message); // send a message
-
-        Serial.println("Send Message!");
-    }
-    // // LoRa.onReceive(onReceive);
-    // int ack = LoRa.parsePacket();
-    // if(ack){
-    //     Serial.println("Ack recieved");
-    // }else{
-    //     Serial.println("Ack not recieved");
-    // }
-    // int rssi = LoRa.packetRssi();
-    // Serial.print("RSSI: ");
-    // Serial.println(rssi);
-    delay(5000);
+    LoRa.receive();
+    delay(2000);
+    sendMessage("test");
+    delay(2000);
 }

@@ -8,7 +8,7 @@
 #define SS 18
 #define RST 14
 #define DIO0 26
-#define BAND 923E6
+#define BAND 915E6
 #endif
 
 extern const int csPin = 7;          // LoRa radio chip select
@@ -19,48 +19,57 @@ byte localAddress = 0xaf;     // address of this device
 String localAddressString = "0xaf";
 byte destination = 0x23;      // destination to send to
 String destinationAddressString = "0x23";
+extern bool sendSuccess = false;
+extern bool resendData = false;
+unsigned long previousMillis = 0;
+extern bool receiveModeData = false;
+extern String receiveData = "";
 
-void LoRa_rxMode(){
-  LoRa.enableInvertIQ();                // active invert I and Q signals
-  LoRa.receive();                       // set receive mode
-}
+bool isAlphaNumericOrComma(char c);
+bool hasNonAlphaNumericChars(String str);
 
-void LoRa_txMode(){
-  LoRa.idle();                          // set standby mode
-  LoRa.disableInvertIQ();               // normal mode
-}
-
-void LoRa_sendMessage(String message) {
-  LoRa_txMode();                        // set tx mode
+void sendMessage(String outgoing) {
   LoRa.beginPacket();                   // start packet
-  LoRa.print(message);                  // add payload
-  LoRa.endPacket(true);                 // finish packet and send it
+  LoRa.write(destination);              // add destination address
+  LoRa.write(localAddress);             // add sender address
+  LoRa.write(outgoing.length());        // add payload length
+  LoRa.print(outgoing);                 // add payload
+  LoRa.endPacket();                     // finish packet and send it                          // increment message ID
+  Serial.print(" destination :");
+  Serial.println(destination,HEX);
+  Serial.print(" localAddress :");
+  Serial.println(localAddress,HEX);
+  Serial.print(" outgoing.length :");
+  Serial.println(outgoing.length());
+  Serial.print(" outgoing :");
+  Serial.println(outgoing);
 }
+
 
 void onReceive(int packetSize) {
-  String message = "";
+  // received a packet
+  Serial.print("Received packet '");
 
-  while (LoRa.available()) {
-    message += (char)LoRa.read();
+  // read packet
+  for (int i = 0; i < packetSize; i++) {
+    Serial.print((char)LoRa.read());
   }
 
-  Serial.print("Node Receive: ");
-  Serial.println(message);
+  // print RSSI of packet
+  Serial.print("' with RSSI ");
+  Serial.println(LoRa.packetRssi());
 }
 
-void onTxDone() {
-  Serial.println("TxDone");
-  LoRa_rxMode();
-}
-
-boolean runEvery(unsigned long interval)
-{
-  static unsigned long previousMillis = 0;
-  unsigned long currentMillis = millis();
-  if (currentMillis - previousMillis >= interval)
-  {
-    previousMillis = currentMillis;
-    return true;
+bool hasNonAlphaNumericChars(String str){
+  for (int i = 0; i < str.length(); i++) {
+    char currentChar = str[i];
+    if (!isAlphaNumericOrComma(currentChar)) {
+      return true;  // พบตัวอักขระที่ไม่ใช่ A-Z, 0-9 และ ,
+    }
   }
-  return false;
+  return false;  // ไม่พบตัวอักขระที่ไม่ใช่ A-Z, 0-9 และ ,
+}
+
+bool isAlphaNumericOrComma(char c) {
+  return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || (c == ',') || (c == '.');
 }
