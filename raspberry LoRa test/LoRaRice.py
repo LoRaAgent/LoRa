@@ -38,6 +38,7 @@ class LoRaDevice(LoRa):
         self.destinationaddr_rx = 0
         self.data_lenght_rx = 0
         self.stateRx = False
+        self.stateTx = False
         self.confirmReceive = False
         self.rssiNode = 0
         self.snrNode = 0
@@ -49,12 +50,10 @@ class LoRaDevice(LoRa):
         self.set_mode(MODE.STDBY)
 
     def send(self):
-        lora.set_tx_power(12)
+        lora.set_tx_power(18)
         sleep(0.2)
         data_to_send = "Test"
-        data_lenght = len(data_to_send)
-        data = str(int(self.destination_address,16))+" "+str(int(self.local_address,16))+" "+str(data_lenght)+" "+data_to_send
-        self.write_payload(data)
+        self.write_payload(data_to_send)
         self.set_mode(MODE.TX)
         self.clear_irq_flags(TxDone=1)
         sleep(0.5)
@@ -67,18 +66,7 @@ class LoRaDevice(LoRa):
         print("Received",payload)
         if payload is not None:
             self.stateRx = True
-            self.rssiNode = self.get_pkt_rssi_value()
-            self.snrNode = self.get_pkt_snr_value()
-            current_time = datetime.datetime.now()
-            current_date = current_time.date()
-            base_file_name = ''
-            file_name = f"{base_file_name}_{current_date}.txt"
-            with open(file_name,'a') as file:
-                file.write('\n')
-                file.write('\nDate : '+ current_time)
-                file.write('\nRssi: '+ str(self.rssiNode))
-                file.write('\nSnr : '+ str(self.snrNode))
-            print("----------------------------------Save Log----------------------------------")
+            #print(self.get_pkt_rssi_value)
             # self.localaddr_rx = payload[0]
             # self.destinationaddr_rx = payload[1]
             # self.data_lenght_rx = payload[2]
@@ -131,20 +119,27 @@ class LoRaDevice(LoRa):
         state = "ONE"  #assign state
         count = 0
         while True:
-            try:
                 if state == "ONE":
                     lora.send()
                     state = "TWO"
+                    #print("Data sent go to state "+ state)
                 elif state == "TWO":
-                    if self.stateRx == True:
-                        print("Received.")
-                        state = "ONE"
-                    else:
-                        count+=1
-                        print("Can not receive round: "+count)
-            except Exception as e:
-                sleep(5)
-                print("System Errer : ",e)
+                        #rssi_value = self.get_rssi_value()
+                        #status = self.get_modem_status()
+                        sys.stdout.flush()
+                        if self.stateRx == True:
+                                #print("Received.")
+                                self.stateRx = False
+                                state = "ONE"
+                     #else:
+                        #print("Can not receive")    #add millis instead of sleep
+                         #count+=1
+                         #print("Can not receive round: "+str(count))
+                         #if count == 5:
+                         #    state = "ONE"
+                         #    print("Can not receive back to state "+state)
+                         #    count = 0
+                sleep(0.1)
 
 lora = LoRaDevice(verbose=False)
 lora.set_mode(MODE.STDBY)
