@@ -14,35 +14,24 @@ void setup(){
         Serial.println("LoRa Initailization failed!");
         delay(500);
     }
-    // LoRa.onReceive(onReceive);
-    // LoRa.receive();
+    LoRa.setSpreadingFactor(7);          //testing Spreading factors can chage 7-12
     Serial.println("LoRa init succeeded.");
 }
 
 void loop(){
-    //LoRa.receive();
-    // if(onReceive()== true){
-    // }
-    // onReceive();
-    // delay(1000);
     if(state == 1){
-        // LoRa.receive();
-        // Serial.println("state1");
-        // Serial.println(SuccessReceived);
         sendMessage("hello world");
-        if(SuccessReceived == true){
-            state = 2;
-            Serial.println("chage");
-            SuccessReceived = false;
-        }else{
-            state = 1;
-        }
+        state = 2;
     }else if(state == 2){
         onReceive();
         Serial.println("state2");
-        state = 1;
+        if(SuccessReceived == true){
+            state = 1;
+            Serial.println("change");
+            SuccessReceived = false;
+        }else if(SuccessReceived == false){
+            state = 2;
+        }
         delay(1000);
     }
-    // sendMessage("test");
-    // delay(1000);
 }
