@@ -66,18 +66,18 @@ class LoRaDevice(LoRa):
         payload = self.read_payload(nocheck=True)
         self.rssiNode = self.get_pkt_rssi_value()
         self.snrNode = self.get_pkt_snr_value()
-        #print("Received",payload)
+        print("Received",payload)
         print("Rssi : ",self.rssiNode)
         print("Snr : ",self.snrNode)
         if payload is not None:
             self.stateRx = True
-            self.received_data = payload
+            self.received_data = ''.join(chr(byte) for byte in payload)
             if re.search(r'[A-Za-z,.[\]]',self.received_data):
                 print("Received : ",self.received_data)
                 current_time = datetime.datetime.now()
                 current_date = current_time.date()
                 current_data = "Time" + str(current_time)
-                base_file_name = ''
+                base_file_name = '/home/LoRa/Desktop/raspberry LoRa test/Log'
                 file_name = f"{base_file_name}_{current_date}.txt"
                 #write data into file
                 with open(file_name,'a') as file:
@@ -104,24 +104,20 @@ class LoRaDevice(LoRa):
         start_time = time.time()*1000
         while True:
             current_time = int(round(time.time()*1000))
-            if state == "ONE":
-                sys.stdout.flush()
-                if self.stateRx == True:
-                    self.stateRx = False
-                    state = "TWO"
-                else:
-                    if current_time - start_time >= 1000:
-                        count+=1
-                        print("Can not receive round: "+str(count))
-                        start_time = current_time
-                        if count == 5:
-                            state = "ONE"
-                            print("Can not receive back to state "+state)
-                            count = 0
-            elif state == "TWO":
-                lora.send()
-                state = "ONE"
-            sleep(0.1)
+            if current_time - start_time >= 1000:
+                if state == "ONE":
+                        sys.stdout.flush()
+                        if self.stateRx == True:
+                                self.stateRx = False
+                                state = "TWO"
+                        else:
+                                print("Can not receive")
+                                start_time = current_time
+                elif state == "TWO":
+                        lora.send()
+                        state = "ONE"
+                start_time = current_time
+
 
 lora = LoRaDevice(verbose=False)
 lora.set_mode(MODE.STDBY)
