@@ -3,7 +3,7 @@
 #include <SPI.h>
 #include <Arduino.h>
 long lastSendTime = 0;        // last send time
-int interval = 2000;        // interval between sends
+int interval = 1000;        // interval between sends
 int state = 1;
 void setup(){
     Serial.begin(115200);
@@ -19,19 +19,24 @@ void setup(){
 }
 
 void loop(){
-    if(state == 1){
-        sendMessage("hello world");
-        state = 2;
-    }else if(state == 2){
-        onReceive();
-        Serial.println("state2");
-        if(SuccessReceived == true){
+    //onReceive();
+        if(state == 1){
+            onReceive();
+            if(SuccessReceived == true){
+                state = 2;
+                Serial.println("change");
+                SuccessReceived = false;
+            }else{
+                if (millis() - lastSendTime > interval) {
+                    lastSendTime = millis();
+                    Serial.println("Waiting");
+                    state = 1;
+                }
+            }
+        }else if(state == 2){
+            for(int i=0;i<1;i++)
+                sendMessage("hello world");
+                delay(1000);
             state = 1;
-            Serial.println("change");
-            SuccessReceived = false;
-        }else if(SuccessReceived == false){
-            state = 2;
         }
-        delay(1000);
-    }
 }
