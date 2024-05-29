@@ -10,6 +10,7 @@ import requests
 import socket
 import json
 import os
+from vcgencmd import Vcgencmd
 ##########################################################
 import bme280
 import smbus2 
@@ -251,7 +252,6 @@ class LoRaGateway(LoRa):
 		self.previousPumpState = 0
 		#////////////////////////Gateway/////////////////////////////
 		self.blynkTemp = 0
-		self.blynkHum = 0
 		self.blynkWaterLevelStart = 0
 		self.blynkWaterLevelStop = 0
 		self.blynkUsageStateN1 = 0
@@ -1679,7 +1679,6 @@ class LoRaGateway(LoRa):
 		self.previousPumpState = 0
 		#////////////////////////Gateway/////////////////////////////
 		self.blynkTemp = 0
-		self.blynkHum = 0
 		self.blynkWaterLevelStart = 0
 		self.blynkWaterLevelStop = 0
 		self.blynkUsageStateN1 = 0
@@ -1721,7 +1720,6 @@ class LoRaGateway(LoRa):
 						print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> gateway update <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
 						try:
 							blynk.virtual_write(32,self.blynkTemp)
-							blynk.virtual_write(33,self.blynkHum)
 							blynk.virtual_write(31,1)
 						except BrokenPipeError:
 								print("pass")
@@ -1769,9 +1767,7 @@ class LoRaGateway(LoRa):
 				self.checkStatusNode()
 				if state == "ONE":  #อ่านค่าเซ็นเซอร์
 					#blynk.log_message("test_event")
-					bme280_data = bme280.sample(bus,address)
-					self.blynkTemp = bme280_data.temperature
-					self.blynkHum = bme280_data.humidity
+					self.blynkTemp = vc.measure_temp()
 					self.setupMode()
 					print(state)
 					state = "TWO" 
