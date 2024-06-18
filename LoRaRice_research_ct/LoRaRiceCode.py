@@ -192,7 +192,7 @@ class LoRaGateway(LoRa):
 		self.countSleep= 0
 		self.flag = 0
 		#//////////////////////Node 1/////////////////////////
-		self.destination_Node1 = hex(0x11)
+		self.destination_Node1 = hex(0xb1)
 		self.confirmNode1 = "Pass"
 		self.waterLevelNode1 = 0
 		self.tempNode1 = 0    
@@ -210,7 +210,7 @@ class LoRaGateway(LoRa):
 		
 		self.previousWaterLevelNode1 = 0.0
 		#//////////////////////Node 2/////////////////////////
-		self.destination_Node2 = hex(0x12)
+		self.destination_Node2 = hex(0xb2)
 		self.confirmNode2 = "Pass"
 		self.waterLevelNode2 = 0
 		self.tempNode2 = 0
@@ -228,7 +228,7 @@ class LoRaGateway(LoRa):
 		
 		self.previousWaterLevelNode2 = 0
 		#//////////////////////Node 3/////////////////////////
-		self.destination_Node3 = hex(0x13)
+		self.destination_Node3 = hex(0xb3)
 		self.confirmNode3 = "Pass"
 		self.tempNode3 = 0
 		self.humNode3 = 0
@@ -387,7 +387,7 @@ class LoRaGateway(LoRa):
 					payload_as_str = [str(item) for item in payload]
 					
 					# สร้างชื่อไฟล์ใหม่โดยมีการลงท้ายด้วยวันที่ปัจจุบัน
-					base_file_name = '/home/LoRa/Documents/raspberry LoRa test/log'
+					base_file_name = '/home/LoRa/Documents/LoRaRice_Research_ct/log/log_receive'
 					file_name = f"{base_file_name}_{current_date}.txt"
 
 					# ตรวจสอบว่าไฟล์ใหม่สร้างขึ้นในวันเดียวกันหรือไม่
@@ -400,6 +400,7 @@ class LoRaGateway(LoRa):
 					with open(file_name, 'a') as file:
 						file.write('\n')
 						file.write(current_data)
+						file.write('\nNode address  	: ' + hex(self.destination_rx))
 						file.write('\nReceive as byte		: ' + ','.join(payload_as_str))
 						file.write('\nReceive as String	: ' + self.received_data)
 						file.write('\nRSSI 				: ' + str(self.rssiNode))
@@ -1604,7 +1605,7 @@ class LoRaGateway(LoRa):
 			self.blynkUsageStateN2 = self._backUp_blynkUsageStateN2
 			self.blynkUsageStateN3 = self._backUp_blynkUsageStateN3
 	def reset_value(self):
-		self.localAddress_Gateway = hex(0xbb)
+		self.localAddress_Gateway = hex(0xa1)
 		self.received_data = 0
 		self.localAddress_rx = 0
 		self.destination_rx = 0
@@ -1621,7 +1622,7 @@ class LoRaGateway(LoRa):
 		self.countSleep= 0
 		self.flag = 0
 		#//////////////////////Node 1/////////////////////////
-		self.destination_Node1 = hex(0xa1)
+		self.destination_Node1 = hex(0xb1)
 		self.confirmNode1 = "Pass"
 		self.waterLevelNode1 = 0
 		self.tempNode1 = 0    
@@ -1638,7 +1639,7 @@ class LoRaGateway(LoRa):
 		self.blynkTimeDebugNode1 = 0
 		
 		#//////////////////////Node 2/////////////////////////
-		self.destination_Node2 = hex(0xb1)
+		self.destination_Node2 = hex(0xb2)
 		self.confirmNode2 = "Pass"
 		self.waterLevelNode2 = 0
 		self.tempNode2 = 0
@@ -1655,7 +1656,7 @@ class LoRaGateway(LoRa):
 		self.blynkTimeDebugNode2 = 0
 		
 		#//////////////////////Node 3/////////////////////////
-		self.destination_Node3 = hex(0xc1)
+		self.destination_Node3 = hex(0xb3)
 		self.confirmNode3 = "Pass"
 		self.tempNode3 = 0
 		self.humNode3 = 0
@@ -1810,7 +1811,7 @@ class LoRaGateway(LoRa):
 				current_data = "Time" + str(current_time)
 
 				# สร้างชื่อไฟล์ใหม่โดยมีการลงท้ายด้วยวันที่ปัจจุบัน
-				base_file_name = '/home/LoRa/Documents/raspberry LoRa test/log_error'
+				base_file_name = '/home/LoRa/Documents/LoRaRice_Research_ct/log_error/log_error_receive'
 				file_name = f"{base_file_name}_{current_date}.txt"
 
 				# ตรวจสอบว่าไฟล์ใหม่สร้างขึ้นในวันเดียวกันหรือไม่
