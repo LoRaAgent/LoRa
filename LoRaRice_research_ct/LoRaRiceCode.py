@@ -12,8 +12,8 @@ import json
 import os
 from vcgencmd import Vcgencmd
 ##########################################################
-import bme280
-import smbus2 
+#import bme280
+#import smbus2 
 #############################################################################
 import RPi.GPIO as GPIO
 #####################ตรวจสอบการรันโปรแกรมครั้งแรก  ต้องมีอินเทอร์เน็ต#####################
@@ -35,24 +35,32 @@ while not check_internet():
 
 # If internet connection is available, run your program
 print("Internet connection detected. Running your program...")
-#############################################################################
+##########################################################
+##########################################################
 import BlynkLib
 from BlynkTimer import BlynkTimer
 
-BLYNK_AUTH_TOKEN = '4ngaqiBhxitikMMzGH3O_tTTiwwRUyIH'
-BLYNK_TEMPLATE_ID = "TMPL6v-6V-Ezu"
-BLYNK_TEMPLATE_NAME = "LoRaRiceCopy"
+BLYNK_AUTH_TOKEN = 'LXtWlaaw4DLHM4mUKKIH-TbPgGJ3S6uw'
+BLYNK_TEMPLATE_ID = "TMPL6TdJHiUps"
+BLYNK_TEMPLATE_NAME = "LoRaRiceCopyCopy"
 
 # Initialize Blynk
 blynk = BlynkLib.Blynk(BLYNK_AUTH_TOKEN)
+#blynk = None
+#def connect_to_blynk():
+#    global blynk
+#    try:
+#        blynk = BlynkLib.Blynk(BLYNK_AUTH_TOKEN)
+#        print("Connected to Blynk!")
+#    except Exception as e:
+#        print("Error connecting to Blynk:", e)
 
 timer = BlynkTimer()
 ##############################
-port = 1
-address = 0x76 # Adafruit BME280 address. Other BME280s may be different
-bus = smbus2.SMBus(port)
-bme280.load_calibration_params(bus,address)
+vc = Vcgencmd()
 ##############################
+# Led control through V0 virtual pin
+##########################################################
 
 ###################################################### Blynk Node1 ##############################################################
 @blynk.on("V6")
@@ -355,6 +363,9 @@ class LoRaGateway(LoRa):
 		self.blynkUsageStateN3 = value
 		print("blynk blynkUsageStateN3 pass", self.blynkUsageStateN3)
 	#////////////////////////////////////////////////////////////////////
+	def setCountLcd(self, value):
+		self.countLcd = value
+		print("countLcd ==========", self.countLcd)
 	def on_rx_done(self):
 		#print("\nRxDone")
 		self.clear_irq_flags(RxDone=1)
@@ -387,7 +398,7 @@ class LoRaGateway(LoRa):
 					payload_as_str = [str(item) for item in payload]
 					
 					# สร้างชื่อไฟล์ใหม่โดยมีการลงท้ายด้วยวันที่ปัจจุบัน
-					base_file_name = '/home/LoRa/Documents/LoRaRice_Research_ct/log/log_receive'
+					base_file_name = '/home/LoRa/Documents/LoRaRice_research_ct/log/logfile_Receive_LoRaRice'
 					file_name = f"{base_file_name}_{current_date}.txt"
 
 					# ตรวจสอบว่าไฟล์ใหม่สร้างขึ้นในวันเดียวกันหรือไม่
@@ -400,7 +411,7 @@ class LoRaGateway(LoRa):
 					with open(file_name, 'a') as file:
 						file.write('\n')
 						file.write(current_data)
-						file.write('\nNode address  	: ' + hex(self.destination_rx))
+						file.write('\nNode address		: ' + hex(self.destination_rx))
 						file.write('\nReceive as byte		: ' + ','.join(payload_as_str))
 						file.write('\nReceive as String	: ' + self.received_data)
 						file.write('\nRSSI 				: ' + str(self.rssiNode))
@@ -409,7 +420,6 @@ class LoRaGateway(LoRa):
 					print("---------------------------------save log----------------------------")
 				else:
 					print("falseeee")
-				
 	def checkDataAndUpdate(self):
 		if hex(self.localAddress_rx) == self.localAddress_Gateway and hex(self.destination_rx) == self.destination_Node1:
 			current_time = datetime.datetime.now()
@@ -745,8 +755,8 @@ class LoRaGateway(LoRa):
 						stateBlynkRx = False
 				if self.wifiConnect == 1:
 					try:
-						blynk.virtual_write(48,self.rssiNode )
-						blynk.virtual_write(49,self.snrNode )
+						blynk.virtual_write(47,self.rssiNode )
+						blynk.virtual_write(48,self.snrNode )
 					except BrokenPipeError:
 						print("pass")
 			else:
@@ -1420,12 +1430,12 @@ class LoRaGateway(LoRa):
 		if self.check_internet():
 			# ถ้าเชื่อมต่อ WiFi ทำงานปกติ
 			self.wifiConnect = 1
-			print("--------------------------------------เชื่อมต่อ WiFi และอินเตอร์เน็ต--------------------------------------")
+			print("--------------------------------------Connected to WiFi and Internet--------------------------------------")
 			# ต่อไปจะเขียนโค้ดที่ต้องการให้ทำงานเมื่อเชื่อมต่อ WiFi และอินเตอร์เน็ต
 		else:
 			# หากไม่ได้เชื่อมต่อ WiFi ทำงานอีกแบบ
 			self.wifiConnect = 0
-			print("--------------------------------------ไม่ได้เชื่อมต่อ WiFi หรืออินเตอร์เน็ต--------------------------------------")
+			print("--------------------------------------Can not connect to WiFi and Internet--------------------------------------")
 			# ต่อไปจะเขียนโค้ดที่ต้องการให้ทำงานเมื่อไม่ได้เชื่อมต่อ WiFi หรืออินเตอร์เน็ต
 			
 	def backUpData(self):
@@ -1697,6 +1707,8 @@ class LoRaGateway(LoRa):
 				blynk.sync_virtual(6,7,8,16,17,18,23,24,25,28,29,38,39,40,41,42,43,44)
 			except BrokenPipeError:
 				print("pass")
+		else:
+			print('Not Connect WiFi')
 		self.reset_ptr_rx()
 		self.set_mode(MODE.RXCONT)
 		state = "ONE"  # กำหนด initial state เป็น "WAITING"
@@ -1713,14 +1725,11 @@ class LoRaGateway(LoRa):
 					count_checkStatusPump = count_checkStatusPump+1
 					if self.countLcd == 2 or self.countLcd == 3 or self.countLcd == 4:
 						self.countSleep = self.countSleep+1
-					if self.countSleep >=5:
-						self.countLcd = 1
-						self.check_WifiConnect()
-						self.countSleep = 0
 					if count_update_blynkGateway >= 30 and self.wifiConnect == 1:
-						print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> gateway update <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+						print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> gateway temp and hum update <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
 						try:
-							blynk.virtual_write(32,self.blynkTemp)
+							blynk.virtual_write(32,self.blynkTemp)#temp
+							#blynk.virtual_write(33,11)#hum
 							blynk.virtual_write(31,1)
 						except BrokenPipeError:
 								print("pass")
@@ -1731,7 +1740,6 @@ class LoRaGateway(LoRa):
 							print("-------------------------------------VVVVVVVVVVV-------------------------------------")
 							blynk.run()
 							blynk.connect()
-							
 							blynk.sync_virtual(6,7,8,16,17,18,23,24,25,28,29,38,39,40,41,42,43,44)
 							#self.backUpData()
 							#self.reset_value()
@@ -1739,8 +1747,6 @@ class LoRaGateway(LoRa):
 							self.clone_backup_to_blynk(1)
 							#update backUp to blynk
 							state = "ONE"
-							
-							
 						elif self.wifiConnect == 0:
 							print("-------------------------------------wifi not Connect-------------------------------------")
 							print("-------------------------------------VVVVVVVVVVV-------------------------------------")
@@ -1811,7 +1817,7 @@ class LoRaGateway(LoRa):
 				current_data = "Time" + str(current_time)
 
 				# สร้างชื่อไฟล์ใหม่โดยมีการลงท้ายด้วยวันที่ปัจจุบัน
-				base_file_name = '/home/LoRa/Documents/LoRaRice_Research_ct/log_error/log_error_receive'
+				base_file_name = '/home/LoRa/Documents/LoRaRice_research_ct/log_error/logfile_codeError'
 				file_name = f"{base_file_name}_{current_date}.txt"
 
 				# ตรวจสอบว่าไฟล์ใหม่สร้างขึ้นในวันเดียวกันหรือไม่
@@ -1828,7 +1834,7 @@ class LoRaGateway(LoRa):
 					try:
 					    blynk.connect()
 					except:
-						pass
+					    pass
 				print("---------------------------------save log Error----------------------------")
 				#os.system("sudo reboot")
 				continue
@@ -1838,7 +1844,6 @@ lora = LoRaGateway(verbose=True)
 lora.set_mode(MODE.STDBY)
 lora.set_pa_config(pa_select=1)
 lora.set_freq(923.0)  # ต้องกำหนดค่าตามที่ใช้งาน
-lora.set_spreading_factor(11)
 
 # เริ่มต้นโปรแกรม
 try:
@@ -1857,6 +1862,19 @@ except KeyboardInterrupt:
 	sys.stdout.flush()
 	print('')
 	sys.stderr.write("KeyboardInterrupt\n")
+	
+
+
+# save by jack 
+#print("destination_rx :" ,hex(self.destination_rx))
+#print("data_length_rx :" ,self.data_length_rx),
+#datasend = self.received_data
+#blynk.virtual_write(3,str(datasend))
+#current_data = "Time"+str(current_time)+" Data "+self.received_data 
+#print(current_data)
+#with open("logfile.txt", "a") as log_file:
+#	log_file.write(current_data + "\n")
 
 
     
+
